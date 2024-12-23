@@ -14,7 +14,6 @@ export default function Navbar() {
                 <li><Link href="#services" className="delay-100 ease-out transition  hover:text-fuchsia-900">Add Review</Link></li>
             </ul>
             
-      
     </div>
 
          
