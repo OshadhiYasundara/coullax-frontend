@@ -1,82 +1,69 @@
-import Link from 'next/link'
-import React from 'react'
-import BookCardHome from './BookCardHome'
-
+'use client'
+import Link from "next/link";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import BookCardHome from "./BookCardHome";
+import { Review } from "../../types/reviews";
+import Loader from "./Loader";
 
 export default function Reviews() {
-    const data = [
-        {
-            "id": 2,
-            "bookTitle": "1984",
-            "author": "George Orwell",
-            "rating": 4,
-            "reviewText": "A chilling vision of a dystopian future that feels more relevant with each passing year.",
-            "dateAdded": "2024-12-23T06:27:29.582Z"
-        },
-        {
-            "id": 3,
-            "bookTitle": "Pride and Prejudice",
-            "author": "Jane Austen",
-            "rating": 5,
-            "reviewText": "An enchanting story about love, society, and the complexity of human emotions.",
-            "dateAdded": "2024-12-23T06:27:37.267Z"
-        },
-        {
-            "id": 4,
-            "bookTitle": "The Catcher in the Rye",
-            "author": "J.D. Salinger",
-            "rating": 3,
-            "reviewText": "A deep dive into adolescent angst and rebellion, though not for everyone.",
-            "dateAdded": "2024-12-23T06:27:43.298Z"
-        },
-        {
-            "id": 1,
-            "bookTitle": "To Kill a Mockingbird",
-            "author": "Harper Lee",
-            "rating": 5,
-            "reviewText": "A timeless story of justice and morality, with unforgettable characters and a strong message.",
-            "dateAdded": "2024-12-23T06:27:16.937Z"
-        },
-        {
-            "id": 6,
-            "bookTitle": "The Hobbit",
-            "author": "J.R.R. Tolkien",
-            "rating": 5,
-            "reviewText": "A magical journey full of adventure, bravery, and the richness of Middle-earth.",
-            "dateAdded": "2024-12-23T06:30:04.264Z"
-        }
-    ]
-  return (
-    <div className='mx-20 my-10 space-y-5'>
-        <div className=" flex  justify-between font-merriweather ">
-            <h1 className="text-3xl font-bold text-custom-text">Reviews</h1>
-            <Link href="/add-review" className='text-custom-green underline hover:text-custom-text delay-100 ease-out transition'>
+    const [reviews, setReviews] = useState<Review[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    useEffect(() => {
+        setIsLoading(true);
+        const fetchReviews = async () => {
+            try {
+                const response = await axios.get("http://localhost:5000/reviews");
+                setReviews(response.data);
+                setIsLoading(false);
+            } catch (error) {
+                console.error("Error fetching reviews:", error);
+                setIsLoading(false);
+            }
+        };
+
+        fetchReviews();
+        
+    }, []);
+
+    // Sort by rating in descending order and select the top 5
+    const bestRatedReviews = [...reviews]
+        .sort((a, b) => b.rating - a.rating || new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime())
+        .slice(0, 5);
+
+    return (
+        <div className="sm:mx-20 px-5 my-10 space-y-5">
+            <div className="flex justify-between font-merriweather">
+            <h1 className="text-3xl font-bold text-custom-text">Top Rated Reviews</h1>
+            <Link
+                href="/allreviews"
+                className="text-custom-green underline hover:text-custom-text delay-100 ease-out transition"
+            >
                 View All
             </Link>
+            </div>
+
+            {isLoading ? (
+            <Loader/>
+            ) : (
+                
+            <div className="flex flex-wrap gap-4">
+                {bestRatedReviews.map((review) => (
+                <BookCardHome
+                    key={review.id}
+                    id={review.id}
+                    bookTitle={review.bookTitle}
+                    author={review.author}
+                    rating={review.rating}
+                    reviewText={review.reviewText}
+                    dateAdded={review.dateAdded}
+                />
+                ))}
+            </div>
+            )}
+            {!isLoading && bestRatedReviews.length === 0 &&  (
+                <p className="text-custom-text py-20">No reviews found.</p>
+            )}
         </div>
-        {/* <div className="">
-            {data.map((review) => (
-                <div key={review.id} className="my-5 p-5 bg-custom-yellow rounded-xl">
-                    <h2 className="text-xl font-bold text-custom-text">{review.bookTitle}</h2>
-                    <p className="text-md text-custom-text">by {review.author}</p>
-                    <p className="text-md text-custom-text">Rating: {review.rating}</p>
-                    <p className="text-md text-custom-text">{review.reviewText}</p>
-                </div>
-            ))}
-        </div> */}
-      <div className=" flex flex-wrap gap-4">
-        {data.map((review) => (
-            <BookCardHome 
-            key={review.id}
-            id={review.id}
-            bookTitle={review.bookTitle}
-            author={review.author}
-            rating={review.rating}
-            reviewText={review.reviewText}
-            dateAdded={review.dateAdded}
-            />
-        ))}
-    </div>
-    </div>
-  )
+    );
 }
